@@ -1,0 +1,25 @@
+<html>
+<head>
+  <%= css :application, :media => 'screen' %>
+  <%= js :app %>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="/"><%= settings.site_name %></a>
+      </div>
+      <% if session[:profile] %>
+        <p class="navbar-text">Signed in as <%= session[:profile].name %></p>
+        <a class="navbar-text" href="/logout">logout</a></p>
+      <% else %>
+        <a class="navbar-text" href="/authorize">login</a></p>
+      <% end %>
+    </nav>
+  </div>
+
+  <div class="container">
+    <%= yield %>
+  </div>
+</body>
+</html>
