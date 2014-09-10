@@ -50,10 +50,7 @@ class GraphKeeper < Sinatra::Base
   get '/' do
     erb :index
   end
-  get '/graph/?' do
-    authorize!
-    erb :graph
-  end
+
   get '/authorize/?' do
     redirect BabyTooth.authorize_url
   end
@@ -61,7 +58,8 @@ class GraphKeeper < Sinatra::Base
     token = BabyTooth.get_token(params[:code])
     if !token.nil? && token != ''
       session[:token] = token
-      session[:profile] = BabyTooth::User.new(session[:token]).profile
+      session[:user] = BabyTooth::User.new(session[:token])
+      session[:profile] = session[:user].profile
       redirect '/graph/'
     else
       erb :authorization, :locals => { response: response }
@@ -70,10 +68,34 @@ class GraphKeeper < Sinatra::Base
   get '/logout/?' do
     if logged_in?
       session.delete :token
+      session.delete :user
       session.delete :profile
       BabyTooth::Client.new(session[:token], '/de-authorize')
     end
     redirect '/'
+  end
+
+  get '/graph/?' do
+    authorize!
+    erb :graph
+  end
+
+  get '/cache/?' do
+    uri = '/fitnessActivities'
+    activities = []
+    feed = BabyTooth::FitnessActivityFeed.new(session[:token], uri)
+    #break unless feed.body.has_key?('items') && feed['items']
+    feed['items'].each do |activity|
+      begin
+        timestamp = Date.strptime(activity["start_time"],"%a, %e %b %Y %H:%M%S")
+      rescue
+        timestamp = "unable to parse #{activity["start_time"]}"
+      end
+      data = { timestamp: timestamp, distance: activity["total_distance"], type: activity["type"] }
+      activities << data
+    end
+    uri = feed['next'] ? feed['next'] : false
+    erb :graph, :locals => { activities: activities, items: feed['items'] }
   end
   run! if app_file == $0
 end
