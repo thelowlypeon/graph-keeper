@@ -37,8 +37,22 @@ class GraphKeeper < Sinatra::Base
     css_compression :simple   # :simple | :sass | :yui | :sqwish
   }
 
+  helpers do
+    def logged_in?
+      session.has_key?(:profile) && !session[:profile].nil?
+    end
+
+    def authorize!
+      redirect '/authorize/' unless logged_in?
+    end
+  end
+
   get '/' do
     erb :index
+  end
+  get '/graph/?' do
+    authorize!
+    erb :graph
   end
   get '/authorize/?' do
     redirect BabyTooth.authorize_url
@@ -48,14 +62,17 @@ class GraphKeeper < Sinatra::Base
     if !token.nil? && token != ''
       session[:token] = token
       session[:profile] = BabyTooth::User.new(session[:token]).profile
-      redirect '/'
+      redirect '/graph/'
     else
       erb :authorization, :locals => { response: response }
     end
   end
   get '/logout/?' do
-    session[:token] = nil
-    session[:profile] = nil
+    if logged_in?
+      session.delete :token
+      session.delete :profile
+      BabyTooth::Client.new(session[:token], '/de-authorize')
+    end
     redirect '/'
   end
   run! if app_file == $0

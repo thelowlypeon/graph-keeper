@@ -1,0 +1,15 @@
+<% if logged_in? %>
+<div class="">
+  <% feed = BabyTooth::User.new(session[:token]).fitness_activity_feed %>
+  <% feed['items'].each do |activity| %>
+    <pre><%= activity.to_json %></pre>
+  <% end %>
+  <h1>and...</h1>
+  <% more_feed = BabyTooth::FitnessActivityFeed.new(session[:token], feed['next']) %>
+  <% more_feed['items'].each do |activity| %>
+    <pre><%= activity.to_json %></pre>
+  <% end %>
+</div>
+<% else %>
+  <p>You should login</p>
+<% end %>
