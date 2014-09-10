@@ -1,1 +1,7 @@
-viewing the index and <%= logged_in? ? 'logged in' : 'logged out' %>
+<h1>Want to view your Runkeeper activities and how much you've changed over the years?</h1>
+
+<% if logged_in? %>
+  <a class="btn btn-primary btn-lg" href="/graph/">Yes!</a>
+<% else %>
+  <a class="btn btn-primary btn-lg" href="/authorize/">Login</a>
+<% end %>
