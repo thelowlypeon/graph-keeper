@@ -1,8 +1,7 @@
 <script type="text/javascript" src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <div class="">
-  <h1>showing <%= activities.size %> activities (should be at least <%= items.size %>)</h1>
   <% activities.each do |activity| %>
-    <pre><%= activity[:distance] %> (@ <%= activity[:timestamp] %>)</pre>
+    <pre><%= activity[:distance] %> (<%= activity[:type] %> @ <%= activity[:timestamp].strftime('%Y%U') %>)</pre>
   <% end %>
 </div>
 

@@ -87,7 +87,7 @@ class GraphKeeper < Sinatra::Base
     #break unless feed.body.has_key?('items') && feed['items']
     feed['items'].each do |activity|
       begin
-        timestamp = Date.strptime(activity["start_time"],"%a, %e %b %Y %H:%M%S")
+        timestamp = Date.strptime(activity["start_time"],"%a, %e %b %Y %H:%M:%S")
       rescue
         timestamp = "unable to parse #{activity["start_time"]}"
       end
