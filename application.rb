@@ -1,21 +1,9 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
-require 'dotenv'
-Dotenv.load #TODO move this to config.ru
 
 require 'sinatra/base'
 require 'sinatra/assetpack'
-require 'baby_tooth'
 require 'less'
-
-BabyTooth.configure do |config|
-  config.access_token_url  = "http://runkeeper.com/apps/token"
-  config.authorization_url = "http://runkeeper.com/apps/authorize"
-  config.client_id         = ENV['CLIENT_ID'] #TODO more specific names
-  config.client_secret     = ENV['CLIENT_SECRET']
-  config.redirect_uri      = ENV['REDIRECT_URI']
-  config.site              = "http://api.runkeeper.com"
-end
 
 class GraphKeeper < Sinatra::Base
   enable :sessions
@@ -23,9 +11,7 @@ class GraphKeeper < Sinatra::Base
   set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
 
   set :root, File.dirname(__FILE__) # You must set app root
-  configure do
-    set :site_name, "Graph Keeper"
-  end
+  set :site_name, "Graph Keeper"
 
   register Sinatra::AssetPack
 
@@ -54,20 +40,20 @@ class GraphKeeper < Sinatra::Base
   get '/' do
     erb :index
   end
-  get '/authorize' do
+  get '/authorize/?' do
     redirect BabyTooth.authorize_url
   end
-  get '/authorized' do
+  get '/authorized/?' do
     token = BabyTooth.get_token(params[:code])
     if !token.nil? && token != ''
       session[:token] = token
       session[:profile] = BabyTooth::User.new(session[:token]).profile
       redirect '/'
     else
-      erb :authorization, :locals => { respose: reponse }
+      erb :authorization, :locals => { response: response }
     end
   end
-  get '/logout' do
+  get '/logout/?' do
     session[:token] = nil
     session[:profile] = nil
     redirect '/'
