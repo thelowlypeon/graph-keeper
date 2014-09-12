@@ -118,24 +118,28 @@ class GraphKeeper < Sinatra::Base
     headers "Content-Disposition" => "attachment;data.csv",
             "Content-Type" => "application/octet-stream"
     results = Hash.new
-    logged_in_user.fitness_activities.each do |activity|
-      datestamp = activity.timestamp.to_i / 60 / 60 / 24 #strftime("%Y/%m/%d")
+    logged_in_user.fitness_activities(1..5).each do |activity|
+      datestamp = activity.timestamp.to_i / 7 / 24 / 60 / 60 #strftime("%Y/%m/%d")
       results[activity['type']] ||= Hash.new
-      results[activity['type']][datestamp] ||= activity.distance
-      #result << "#{activity['type']},#{activity.distance},#{}\n"
-      #result << "#{activity['type']},#{activity.distance},#{activity.timestamp.strftime("%Y/%m/%d")}\n"
+      results[activity['type']][datestamp] ||= 0
+      results[activity['type']][datestamp] += activity.distance
+    end
+    #get max number of elements
+    min_date = nil
+    max_date = nil
+    results.each do |type,data|
+      data.each do |date,distance|
+        min_date = date if min_date.nil? || date < min_date
+        max_date = date if max_date.nil? || date > max_date
+      end
     end
     result = "key,value,date\n"
     results.each do |type,data|
-      min_date = nil
-      max_date = nil #TODO these should be set unrelated to type
       data.each do |date, distance|
-        min_date = date if min_date.nil? || date < min_date
-        max_date = date if max_date.nil? || date > max_date
-        results[type][date] = "#{type},#{distance},#{Time.at(date * 60 * 60 *24).strftime('%Y/%m/%d')}\n"
+        results[type][date] = "#{type},#{distance},#{Time.at(date * 60 * 60 * 24 * 7).strftime('%Y/%W')}\n"
       end
       (min_date..max_date).each do |date|
-        results[type][date] ||= "#{type},0,#{Time.at(date * 60 * 60 *24).strftime('%Y/%m/%d')}\n"
+        results[type][date] ||= "#{type},0,#{Time.at(date * 60 * 60 * 24 * 7).strftime('%Y/%W')}\n"
         result << results[type][date]
       end
     end

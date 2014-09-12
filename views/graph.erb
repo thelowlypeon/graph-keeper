@@ -5,7 +5,7 @@
 
 <script>
 
-chart("/data.csv", "orange");
+chart("/data.csv", "blue");
 
 var datearray = [];
 var colorrange = [];
@@ -24,7 +24,7 @@ else if (color == "orange") {
 }
 strokecolor = colorrange[0];
 
-var format = d3.time.format("%Y/%m/%d");
+var format = d3.time.format("%Y/%d"); //TODO make this work with %W or %U
 
 var margin = {top: 20, right: 40, bottom: 30, left: 30};
 var width = document.body.clientWidth - margin.left - margin.right;
@@ -121,7 +121,6 @@ var graph = d3.csv(csvpath, function(data) {
       .attr("opacity", function(d, j) {
         return j != i ? 0.6 : 1;
     })})
-    /*
 
     .on("mousemove", function(d, i) {
       mousex = d3.mouse(this);
@@ -152,7 +151,7 @@ var graph = d3.csv(csvpath, function(data) {
       d3.select(this)
       .classed("hover", false)
       .attr("stroke-width", "0px"), tooltip.html( "<p>" + d.key + "<br>" + pro + "</p>" ).style("visibility", "hidden");
-  })*/
+  })
     
   var vertical = d3.select(".chart")
         .append("div")
