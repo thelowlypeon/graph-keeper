@@ -13,3 +13,5 @@ gem 'less'
 gem 'therubyracer'
 gem 'sinatra-assetpack', :require => 'sinatra/assetpack'
 gem 'dotenv'
+gem "bson_ext", "~> 1.5"
+gem "mongo_mapper"

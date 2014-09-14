@@ -1,11 +1,15 @@
-<script src="http://d3js.org/d3.v2.js"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
 
-<div class="chart">
+<div id="chart-container" style="position:relative;">
+<div id="tooltip"></div>
+<div id="chart">
+</div>
 </div>
 
 <script>
 
-chart("/data.csv", "blue");
+//z, y, scale
+chart("/data.csv?y=duration", "blue");
 
 var datearray = [];
 var colorrange = [];
@@ -24,15 +28,13 @@ else if (color == "orange") {
 }
 strokecolor = colorrange[0];
 
-var format = d3.time.format("%Y/%d"); //TODO make this work with %W or %U
+var format = d3.time.format("%Y-W%U-%w");
 
-var margin = {top: 20, right: 40, bottom: 30, left: 30};
-var width = document.body.clientWidth - margin.left - margin.right;
-var height = 400 - margin.top - margin.bottom;
+var margin = {top: 80, right: 60, bottom: 50, left: 60};
+var width = $('#chart').parent().width() - margin['right'] - margin['left']; //TODO make this dynamic and friendly with bootstrap
+var height = 600 - margin.top - margin.bottom;
 
-var tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "remove")
+var tooltip = d3.select("#tooltip")
     .style("position", "absolute")
     .style("z-index", "20")
     .style("visibility", "hidden")
@@ -50,8 +52,7 @@ var z = d3.scale.ordinal()
 
 var xAxis = d3.svg.axis()
     .scale(x)
-    .orient("bottom")
-    .ticks(d3.time.weeks);
+    .orient("bottom");
 
 var yAxis = d3.svg.axis()
     .scale(y);
@@ -74,7 +75,7 @@ var area = d3.svg.area()
     .y0(function(d) { return y(d.y0); })
     .y1(function(d) { return y(d.y0 + d.y); });
 
-var svg = d3.select(".chart").append("svg")
+var svg = d3.select("#chart").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")

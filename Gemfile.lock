@@ -1,11 +1,24 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    activemodel (4.1.6)
+      activesupport (= 4.1.6)
+      builder (~> 3.1)
+    activesupport (4.1.6)
+      i18n (~> 0.6, >= 0.6.9)
+      json (~> 1.7, >= 1.7.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.1)
+      tzinfo (~> 1.1)
     addressable (2.3.6)
     baby_tooth (0.0.2)
       faraday-stack
       json
       oauth2 (~> 0.5.0)
+    bson (1.10.2)
+    bson_ext (1.10.2)
+      bson (~> 1.10.2)
+    builder (3.2.2)
     commonjs (0.2.7)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -23,16 +36,27 @@ GEM
     faraday_middleware (0.9.1)
       faraday (>= 0.7.4, < 0.10)
     hashie (3.3.1)
+    i18n (0.6.11)
     jsmin (1.0.1)
     json (1.8.1)
     less (2.6.0)
       commonjs (~> 0.2.7)
-    libv8 (3.16.14.5)
+    libv8 (3.16.14.7)
+    minitest (5.4.1)
+    mongo (1.10.2)
+      bson (= 1.10.2)
+    mongo_mapper (0.13.0)
+      activemodel (>= 3.0.0)
+      activesupport (>= 3.0)
+      mongo (~> 1.8)
+      plucky (~> 0.6.5)
     multi_json (1.10.1)
     multipart-post (1.2.0)
     oauth2 (0.5.2)
       faraday (~> 0.7)
       multi_json (~> 1.0)
+    plucky (0.6.6)
+      mongo (~> 1.5)
     rack (1.5.2)
     rack-protection (1.5.3)
       rack
@@ -56,7 +80,10 @@ GEM
       daemons (>= 1.0.9)
       eventmachine (>= 1.0.0)
       rack (>= 1.0.0)
+    thread_safe (0.3.4)
     tilt (1.4.1)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
     webmock (1.18.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
@@ -66,11 +93,13 @@ PLATFORMS
 
 DEPENDENCIES
   baby_tooth
+  bson_ext (~> 1.5)
   dotenv
   faraday (>= 0.7.4)
   faraday_middleware (>= 0.7.8)
   hashie (>= 1.2)
   less
+  mongo_mapper
   oauth2 (>= 0.5.2)
   sinatra
   sinatra-assetpack

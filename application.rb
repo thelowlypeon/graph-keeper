@@ -6,8 +6,6 @@ require 'sinatra/assetpack'
 require 'less'
 
 class GraphKeeper < Sinatra::Base
-  @@logged_in_users = {}
-
   enable :sessions
   set :session_secret, 'TODO make this a real secret hash or something'
   set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
@@ -16,7 +14,7 @@ class GraphKeeper < Sinatra::Base
 
   helpers do
     def logged_in?
-      !@@logged_in_users[session[:user]].nil?
+      !session[:user].nil?
     end
 
     def authorize!
@@ -24,17 +22,23 @@ class GraphKeeper < Sinatra::Base
     end
 
     def logged_in_user
-      @@logged_in_users[session[:user]] unless !logged_in?
+      User.find(session[:user]) unless !logged_in?
     end
 
     def set_logged_in_user(user)
       if user.nil?
-        @@logged_in_users[session[:user]] = nil
         session.delete :token
         session.delete :user
       else
         session[:user] = user['userID']
-        @@logged_in_users[session[:user]] = user
+        if !User.find(session[:user])
+          User.create(user.to_hash).save
+        end
+        if !logged_in_user
+          raise "There was an error finding or create user #{user['userID']}"
+        else
+          logged_in_user
+        end
       end
     end
   end
@@ -88,7 +92,7 @@ class GraphKeeper < Sinatra::Base
     if !token.nil? && token != ''
       session[:token] = token
       set_logged_in_user BabyTooth::User.new(session[:token])
-      erb :authorization, :locals => {response: "logged in as #{logged_in_user['userID']}"}
+      #erb :authorization, :locals => {response: "logged in as #{logged_in_user.runkeeper_id}"}
       redirect '/graph/'
     else
       erb :authorization, :locals => { response: response }
@@ -109,38 +113,47 @@ class GraphKeeper < Sinatra::Base
 
   get '/cache/?' do
     authorize!
-    activities = logged_in_user.fitness_activities([0,1])
-    erb :graph, :locals => { activities: activities }
+    Activity.collection.remove
+    activities = logged_in_user.activities! session[:token], (0..25)
+    "done, got #{activities.count} activities"
   end
 
   get '/data.csv' do
     authorize!
     headers "Content-Disposition" => "attachment;data.csv",
             "Content-Type" => "application/octet-stream"
+
+    bucket_size = 7 * 24 * 60 * 60 #weeks
+    y = params.has_key?('y') && (Activity.keys.keys.include?(params['y']) || Activity.respond_to?(params['y'])) ? params['y'].to_sym : :total_distance
+    z = params.has_key?('z') && (Activity.keys.keys.include?(params['z']) || Activity.respond_to?(params['z'])) ? params['z'].to_sym : :type
+    scale = params.has_key?('scale') && params['scale'] =~ /^[\d\.]+/ ? params['scale'].to_f : (y == :total_distance ? 0.000621371 : 1)
+
     results = Hash.new
-    logged_in_user.fitness_activities(1..5).each do |activity|
-      datestamp = activity.timestamp.to_i / 7 / 24 / 60 / 60 #strftime("%Y/%m/%d")
-      results[activity['type']] ||= Hash.new
-      results[activity['type']][datestamp] ||= 0
-      results[activity['type']][datestamp] += activity.distance
+    logged_in_user.activities.each do |activity|
+      datestamp = activity.start_time.to_i / bucket_size
+      z_value = activity.send(z)
+      y_value = activity.send(y) * scale
+      results[z_value] ||= Hash.new
+      results[z_value][datestamp] ||= 0
+      results[z_value][datestamp] += y_value
     end
     #get max number of elements
     min_date = nil
     max_date = nil
-    results.each do |type,data|
-      data.each do |date,distance|
+    results.each do |z_value,data|
+      data.each do |date,value|
         min_date = date if min_date.nil? || date < min_date
         max_date = date if max_date.nil? || date > max_date
       end
     end
     result = "key,value,date\n"
-    results.each do |type,data|
-      data.each do |date, distance|
-        results[type][date] = "#{type},#{distance},#{Time.at(date * 60 * 60 * 24 * 7).strftime('%Y/%W')}\n"
+    results.each do |z_value,data|
+      data.each do |date, value|
+        results[z_value][date] = "#{z_value},#{value},#{Time.at(date * bucket_size).strftime('%Y-W%U-0')}\n"
       end
       (min_date..max_date).each do |date|
-        results[type][date] ||= "#{type},0,#{Time.at(date * 60 * 60 * 24 * 7).strftime('%Y/%W')}\n"
-        result << results[type][date]
+        results[z_value][date] ||= "#{z_value},0,#{Time.at(date * bucket_size).strftime('%Y-W%U-0')}\n"
+        result << results[z_value][date]
       end
     end
     result

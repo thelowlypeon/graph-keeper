@@ -12,5 +12,11 @@ BabyTooth.configure do |config|
   config.site              = "http://api.runkeeper.com"
 end
 
+require 'mongo_mapper'
+url = URI(ENV['MONGOMAPPER_CONFIG'])
+::MongoMapper.connection = Mongo::Connection.new(url.host, url.port)
+::MongoMapper.database = url.path.gsub(/^\//, '')
+::MongoMapper.database.authenticate(url.user, url.password) if url.user && url.password
+
 require './application.rb'
 run GraphKeeper

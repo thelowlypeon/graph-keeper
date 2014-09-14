@@ -10,7 +10,7 @@
         <a class="navbar-brand" href="/"><%= settings.site_name %></a>
       </div>
       <% if logged_in? %>
-        <p class="navbar-text">Signed in as <a href="<%= logged_in_user.profile.profile %>"><%= logged_in_user.profile.name %></a></p>
+        <p class="navbar-text">Signed in as <a href="<%= logged_in_user.profile_url %>"><%= logged_in_user.name %></a></p>
         <p><a class="navbar-text" href="/logout">logout</a></p>
       <% else %>
         <p><a class="navbar-text" href="/authorize">login</a></p>
