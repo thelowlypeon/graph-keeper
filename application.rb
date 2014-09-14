@@ -50,6 +50,8 @@ class GraphKeeper < Sinatra::Base
       case bucket
         when 'years'
           365 * 24 * 60 * 60
+        when 'quarters'
+          91 * 24 * 60 * 60
         when 'months'
           30 * 24 * 60 * 60
         when 'days'
@@ -63,6 +65,8 @@ class GraphKeeper < Sinatra::Base
       case bucket
         when 'years'
           "%Y-" + (render_hidden ? "1-1" : "%m-%d")
+        when 'quarters'
+          "%Y-%m-" + (render_hidden ? "1" : "%d")
         when 'months'
           "%Y-%m-" + (render_hidden ? "1" : "%d")
         when 'days'
@@ -143,8 +147,7 @@ class GraphKeeper < Sinatra::Base
 
   get '/cache/?' do
     authorize!
-    Activity.collection.remove
-    activities = logged_in_user.activities! session[:token], (0..25)
+    activities = logged_in_user.activities! session[:token], (0..50)
     "done, got #{activities.count} activities"
   end
 

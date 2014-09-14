@@ -1,14 +1,25 @@
 <script src="http://d3js.org/d3.v3.js"></script>
-<select id="y_options">
-  <option value="total_distance">Distance</option>
-  <option value="total_calories">Calories</option>
-  <option value="duration">Duration</option>
+<form id="options" action="/graph/" method="GET">
+<select name="y" class="options">
+  <option value="total_distance" <%= params['y'] == "total_distance" ? 'selected="selected"' : "" %>>Distance</option>
+  <option value="total_calories" <%= params['y'] == "total_calories" ? 'selected="selected"' : "" %>>Calories</option>
+  <option value="duration" <%= params['y'] == "duration" ? 'selected="selected"' : "" %>>Duration</option>
 </select>
+<select name="bucket" class="options">
+  <% ['Years', 'Quarters', 'Months', 'Weeks', 'Days'].each do |bucket_opt| %>
+    <option value="<%= bucket_opt.downcase %>" <%= bucket == bucket_opt.downcase ? 'selected="selected"' : "" %>><%= bucket_opt %></option>
+  <% end %>
+</select>
+<select name="color" class="options">
+  <% ['Blue', 'Pink', 'Orange'].each do |color_opt| %>
+    <option value="<%= color_opt.downcase %>" <%= params['color'] == color_opt.downcase ? 'selected="selected"' : "" %>><%= color_opt %></option>
+  <% end %>
+</select>
+</form>
 
 <div id="chart-container" style="position:relative;">
-<div id="tooltip"></div>
-<div id="chart">
-</div>
+    <div id="tooltip"></div>
+    <div id="chart"></div>
 </div>
 
 <script>
@@ -16,7 +27,7 @@
 
 //z, y, scale
 var csvpath = "/data.csv?y=total_distance&bucket=<%= bucket %>";
-var color = "blue";
+var color = "<%= params['color'] || 'blue' %>";
 
 var datearray = [];
 var colorrange = [];
@@ -215,7 +226,10 @@ function updateData(_y) {
     });
 }
 
-$('#y_options').change(function() {
+$('select[name=y]').change(function() {
   updateData($(this).val());
+});
+$('select[name=bucket],select[name=color]').change(function() {
+  $(this).closest('form').submit();
 });
 </script>
