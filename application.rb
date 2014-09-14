@@ -7,16 +7,19 @@ require 'less'
 
 class GraphKeeper < Sinatra::Base
   set :root, File.dirname(__FILE__) # You must set app root
-  set :site_name, "Graph Keeper"
-  enable :sessions
-  set :session_secret, 'TODO make this a real secret hash or something'
-  set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
-  set :default_bucket, "months"
-  set :fetch_limit, 60 * 30
-
   require File.join(settings.root, 'app', 'helpers.rb')
   Dir[File.join(settings.root, 'app', 'models', '*.rb')].each{|file| require file}
-  User.set_fetch_limit settings.fetch_limit
+  enable :sessions
+
+  configure do
+    set :site_name, "Graph Keeper"
+    set :session_secret, 'TODO make this a real secret hash or something'
+    set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
+    set :default_bucket, "months"
+    set :fetch_limit, 60 * 30
+    User.set_fetch_limit settings.fetch_limit
+  end
+
 
   register Sinatra::AssetPack
 
