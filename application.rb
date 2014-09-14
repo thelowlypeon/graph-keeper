@@ -6,89 +6,17 @@ require 'sinatra/assetpack'
 require 'less'
 
 class GraphKeeper < Sinatra::Base
+  set :root, File.dirname(__FILE__) # You must set app root
+  set :site_name, "Graph Keeper"
   enable :sessions
   set :session_secret, 'TODO make this a real secret hash or something'
   set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
-  set :root, File.dirname(__FILE__) # You must set app root
-  set :site_name, "Graph Keeper"
+  set :default_bucket, "months"
+  set :fetch_limit, 60 * 30
 
-  helpers do
-    def logged_in?
-      !session[:user].nil?
-    end
-
-    def authorize!
-      redirect '/authorize/' unless logged_in?
-    end
-
-    def logged_in_user
-      User.find(session[:user]) unless !logged_in?
-    end
-
-    def set_logged_in_user(user)
-      if user.nil?
-        session.delete :token
-        session.delete :user
-      else
-        session[:user] = user['userID']
-        if !User.find(session[:user])
-          User.create(user.to_hash).save
-        end
-        if !logged_in_user
-          raise "There was an error finding or create user #{user['userID']}"
-        else
-          logged_in_user
-        end
-      end
-    end
-
-    def bucket
-      params['bucket'] ||= "weeks"
-    end
-
-    def bucket_size
-      case bucket
-        when 'years'
-          365 * 24 * 60 * 60
-        when 'quarters'
-          91 * 24 * 60 * 60
-        when 'months'
-          30 * 24 * 60 * 60
-        when 'days'
-          24 * 60 * 60
-        else
-          7 * 24 * 60 * 60
-      end
-    end
-
-    def date_format(render_hidden = false)
-      case bucket
-        when 'years'
-          "%Y-" + (render_hidden ? "1-1" : "%m-%d")
-        when 'quarters'
-          "%Y-%m-" + (render_hidden ? "1" : "%d")
-        when 'months'
-          "%Y-%m-" + (render_hidden ? "1" : "%d")
-        when 'days'
-          "%Y-%m-%d"
-        else
-          "%Y-%W-" + (render_hidden ? "0" : "%w")
-      end
-    end
-  end
-
-  def self.distance(value, unit)
-    unit = :mile if unit.nil?
-    case unit
-    when :mile
-      distance(value, :km) * 0.621371
-    when :km
-      value / 1000
-    else #meter
-      value
-    end
-  end
+  require File.join(settings.root, 'app', 'helpers.rb')
   Dir[File.join(settings.root, 'app', 'models', '*.rb')].each{|file| require file}
+  User.set_fetch_limit settings.fetch_limit
 
   register Sinatra::AssetPack
 
@@ -118,6 +46,7 @@ class GraphKeeper < Sinatra::Base
     erb :index
   end
 
+  ## AUTHENTICATION ##
   get '/authorize/?' do
     redirect BabyTooth.authorize_url
   end
@@ -140,17 +69,29 @@ class GraphKeeper < Sinatra::Base
     redirect '/'
   end
 
+  ## RENDER GRAPH ##
   get '/graph/?' do
     authorize!
     erb :graph
   end
 
+  ## CONTENT / API ##
+  get '/loading/?' do
+    authorize!
+    erb :loading
+  end
   get '/cache/?' do
     authorize!
-    activities = logged_in_user.activities! session[:token], (0..50)
-    "done, got #{activities.count} activities"
+    if logged_in_user.can_fetch?
+      activities = logged_in_user.activities! session[:token]
+      message = "done, got #{activities.count} activities"
+    else
+      message = "You've made a few too many fetches recently. Please wait at least 30 minutes and try again."
+    end
+    erb :cache, :locals => { message: message}
   end
 
+  ## GENERATE CSV USED FOR GRAPH ##
   get '/data.csv' do
     authorize!
     headers "Content-Disposition" => "attachment;data.csv",

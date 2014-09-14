@@ -1,0 +1,18 @@
+<div class="jumbotron" style="background-color: white;">
+<h1>Welcome! <a href="/graph/"><img src="/images/ajax-loader.gif" /></a></h1>
+
+<p>Looks like you're new here. That's awesome! It'll take a few minutes for <%= settings.site_name %> to gather your data.</p>
+
+<p>You'll be redirected automatically once your data is loaded. If that doesn't happen, <a href="/graph/">click here to view your graphs</a>.</p>
+
+<p>As a reminder, <%= settings.site_name %> doesn't store any actual GPS data, but only the aggregates, like total duration, distance, calories, etc., and the people in your Street Team.</p>
+
+<div class="text-center">
+</div>
+
+</div>
+<script>
+$.get('/cache/', function(data) {
+    window.location = '/graph/';
+});
+</script>

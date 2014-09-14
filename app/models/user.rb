@@ -51,8 +51,13 @@ class User
   key :elite,          Boolean, default: false
   key :gender,         String
   key :profile_url,    String
+  key :last_fetch,     Time
   many :activities
   timestamps!
+
+  def self.set_fetch_limit(limit)
+    @@fetch_limit = limit
+  end
 
   def self.find id
     self.where(runkeeper_id: id).first
@@ -62,12 +67,10 @@ class User
     self.runkeeper_id
   end
 
-  def activities!(token, _pages = [0])
-    _page = _pages.is_a?(Integer) ? _pages : _pages.max
-
-    uri = '/fitnessActivities'
-    (0.._page).each do |page|
-      if uri != "no"
+  def activities!(token)
+    if can_fetch?
+      uri = '/fitnessActivities'
+      while uri != false
         feed = BabyTooth::FitnessActivities.new(token, uri)
         feed['items'].each do |activity_hash|
           if found = Activity.where(uri: activity_hash['uri']).first
@@ -76,12 +79,21 @@ class User
             self.activities.create(activity_hash).save
           end
         end
-        uri = feed.body.has_key?('next') ? feed['next'] : 'no'
-      else
-        break
+
+        if feed.body.has_key?('next') && feed['next'] != ''
+          uri = feed['next']
+        else
+          break
+        end
       end
+      self.last_fetch = Time.now
+      self.save
     end
-    
+
     self.activities
+  end
+
+  def can_fetch?
+    self.last_fetch.nil? || Time.now - self.last_fetch > @@fetch_limit
   end
 end
