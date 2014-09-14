@@ -41,6 +41,36 @@ class GraphKeeper < Sinatra::Base
         end
       end
     end
+
+    def bucket
+      params['bucket'] ||= "weeks"
+    end
+
+    def bucket_size
+      case bucket
+        when 'years'
+          365 * 24 * 60 * 60
+        when 'months'
+          30 * 24 * 60 * 60
+        when 'days'
+          24 * 60 * 60
+        else
+          7 * 24 * 60 * 60
+      end
+    end
+
+    def date_format(render_hidden = false)
+      case bucket
+        when 'years'
+          "%Y-" + (render_hidden ? "1-1" : "%m-%d")
+        when 'months'
+          "%Y-%m-" + (render_hidden ? "1" : "%d")
+        when 'days'
+          "%Y-%m-%d"
+        else
+          "%Y-%W-" + (render_hidden ? "0" : "%w")
+      end
+    end
   end
 
   def self.distance(value, unit)
@@ -123,10 +153,17 @@ class GraphKeeper < Sinatra::Base
     headers "Content-Disposition" => "attachment;data.csv",
             "Content-Type" => "application/octet-stream"
 
-    bucket_size = 7 * 24 * 60 * 60 #weeks
     y = params.has_key?('y') && (Activity.keys.keys.include?(params['y']) || Activity.respond_to?(params['y'])) ? params['y'].to_sym : :total_distance
     z = params.has_key?('z') && (Activity.keys.keys.include?(params['z']) || Activity.respond_to?(params['z'])) ? params['z'].to_sym : :type
-    scale = params.has_key?('scale') && params['scale'] =~ /^[\d\.]+/ ? params['scale'].to_f : (y == :total_distance ? 0.000621371 : 1)
+    scale = params.has_key?('scale') && params['scale'] =~ /^[\d\.]+/ ? params['scale'].to_f :
+      case y
+         when :total_distance
+           0.000621371
+         when :duration
+           1
+         else
+           1
+      end
 
     results = Hash.new
     logged_in_user.activities.each do |activity|
@@ -149,10 +186,10 @@ class GraphKeeper < Sinatra::Base
     result = "key,value,date\n"
     results.each do |z_value,data|
       data.each do |date, value|
-        results[z_value][date] = "#{z_value},#{value},#{Time.at(date * bucket_size).strftime('%Y-W%U-0')}\n"
+        results[z_value][date] = "#{z_value},#{value},#{Time.at(date * bucket_size).strftime(date_format(true))}\n"
       end
       (min_date..max_date).each do |date|
-        results[z_value][date] ||= "#{z_value},0,#{Time.at(date * bucket_size).strftime('%Y-W%U-0')}\n"
+        results[z_value][date] ||= "#{z_value},0,#{Time.at(date * bucket_size).strftime(date_format(true))}\n"
         result << results[z_value][date]
       end
     end

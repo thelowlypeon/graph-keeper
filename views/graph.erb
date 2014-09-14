@@ -1,4 +1,9 @@
 <script src="http://d3js.org/d3.v3.js"></script>
+<select id="y_options">
+  <option value="total_distance">Distance</option>
+  <option value="total_calories">Calories</option>
+  <option value="duration">Duration</option>
+</select>
 
 <div id="chart-container" style="position:relative;">
 <div id="tooltip"></div>
@@ -7,15 +12,14 @@
 </div>
 
 <script>
+//much of this comes from Will Turman @ http://bl.ocks.org/WillTurman/4631136
 
 //z, y, scale
-chart("/data.csv?y=duration", "blue");
+var csvpath = "/data.csv?y=total_distance&bucket=<%= bucket %>";
+var color = "blue";
 
 var datearray = [];
 var colorrange = [];
-
-
-function chart(csvpath, color) {
 
 if (color == "blue") {
   colorrange = ["#045A8D", "#2B8CBE", "#74A9CF", "#A6BDDB", "#D0D1E6", "#F1EEF6"];
@@ -28,7 +32,7 @@ else if (color == "orange") {
 }
 strokecolor = colorrange[0];
 
-var format = d3.time.format("%Y-W%U-%w");
+var format = d3.time.format("<%= date_format %>");
 
 var margin = {top: 80, right: 60, bottom: 50, left: 60};
 var width = $('#chart').parent().width() - margin['right'] - margin['left']; //TODO make this dynamic and friendly with bootstrap
@@ -75,11 +79,12 @@ var area = d3.svg.area()
     .y0(function(d) { return y(d.y0); })
     .y1(function(d) { return y(d.y0 + d.y); });
 
-var svg = d3.select("#chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var svg = d3.select("#chart")
+            .append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var graph = d3.csv(csvpath, function(data) {
   data.forEach(function(d) {
@@ -135,7 +140,7 @@ var graph = d3.csv(csvpath, function(data) {
       }
 
       mousedate = datearray.indexOf(invertedx);
-      pro = d.values[mousedate].value;
+      pro = typeof d.values[mousedate] !== 'undefined' ? Math.round(d.values[mousedate].value * 10, 1) / 10 : 0;
 
       d3.select(this)
       .classed("hover", true)
@@ -153,8 +158,8 @@ var graph = d3.csv(csvpath, function(data) {
       .classed("hover", false)
       .attr("stroke-width", "0px"), tooltip.html( "<p>" + d.key + "<br>" + pro + "</p>" ).style("visibility", "hidden");
   })
-    
-  var vertical = d3.select(".chart")
+
+  var vertical = d3.select("#chart")
         .append("div")
         .attr("class", "remove")
         .style("position", "absolute")
@@ -166,7 +171,7 @@ var graph = d3.csv(csvpath, function(data) {
         .style("left", "0px")
         .style("background", "#fff");
 
-  d3.select(".chart")
+  d3.select("#chart")
       .on("mousemove", function(){  
          mousex = d3.mouse(this);
          mousex = mousex[0] + 5;
@@ -176,5 +181,41 @@ var graph = d3.csv(csvpath, function(data) {
          mousex = mousex[0] + 5;
          vertical.style("left", mousex + "px")});
 });
+
+function updateData(_y) {
+    // Get the data again
+    d3.csv("/data.csv?bucket=<%= bucket %>&y=" + _y, function(error, data) {
+        data.forEach(function(d) {
+          d.date = format.parse(d.date);
+          d.value = +d.value;
+        });
+
+        var layers = stack(nest.entries(data));
+
+        // Scale the range of the data again 
+        x.domain(d3.extent(data, function(d) { return d.date; }));
+        y.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
+
+        // Select the section we want to apply our changes to
+        var svg = d3.select("#chart").transition();
+
+        // Make the changes
+        d3.selectAll("path")     // change the layers
+            .data(layers)
+            .transition()
+            .duration(1750)
+            .attr("d", function(d) { return area(d.values); })
+            .style("fill", function(d, i) { return z(i); });
+        svg.select(".x.axis")    // change the x axis
+            .duration(1750)
+            .call(xAxis);
+        svg.selectAll(".y.axis") // change the y axes
+            .duration(1750)
+            .call(yAxis);
+    });
 }
+
+$('#y_options').change(function() {
+  updateData($(this).val());
+});
 </script>
