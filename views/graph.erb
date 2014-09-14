@@ -26,7 +26,7 @@
 //much of this comes from Will Turman @ http://bl.ocks.org/WillTurman/4631136
 
 //z, y, scale
-var csvpath = "/data.csv?y=total_distance&bucket=<%= bucket %>";
+var csvpath = "/data.csv?y=<%= params['y'] || 'total_distance' %>&bucket=<%= bucket %>";
 var color = "<%= params['color'] || 'blue' %>";
 
 var datearray = [];
