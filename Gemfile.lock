@@ -19,11 +19,6 @@ GEM
     bson_ext (1.10.2)
       bson (~> 1.10.2)
     builder (3.2.2)
-    capistrano (3.2.1)
-      i18n
-      rake (>= 10.0.0)
-      sshkit (~> 1.3)
-    colorize (0.7.3)
     commonjs (0.2.7)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -57,9 +52,6 @@ GEM
       plucky (~> 0.6.5)
     multi_json (1.10.1)
     multipart-post (1.2.0)
-    net-scp (1.2.1)
-      net-ssh (>= 2.6.5)
-    net-ssh (2.9.1)
     oauth2 (0.5.2)
       faraday (~> 0.7)
       multi_json (~> 1.0)
@@ -70,7 +62,6 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.3.2)
     ref (1.0.5)
     safe_yaml (1.0.3)
     sinatra (1.4.5)
@@ -82,10 +73,6 @@ GEM
       rack-test
       sinatra
       tilt (>= 1.3.0, < 2.0)
-    sshkit (1.5.1)
-      colorize
-      net-scp (>= 1.1.2)
-      net-ssh (>= 2.8.0)
     therubyracer (0.12.1)
       libv8 (~> 3.16.14.0)
       ref
@@ -107,7 +94,6 @@ PLATFORMS
 DEPENDENCIES
   baby_tooth
   bson_ext (~> 1.5)
-  capistrano
   dotenv
   faraday (>= 0.7.4)
   faraday_middleware (>= 0.7.8)

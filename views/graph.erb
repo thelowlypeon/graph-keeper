@@ -175,7 +175,7 @@ var graph = d3.csv(csvpath, function(data) {
         .attr("class", "remove")
         .style("position", "absolute")
         .style("z-index", "19")
-        .style("width", "1px")
+        .style("width", "0px") <% #set to 0pm because it's so gross looking %>
         .style("height", "380px")
         .style("top", "10px")
         .style("bottom", "30px")
