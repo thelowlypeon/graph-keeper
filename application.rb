@@ -6,10 +6,10 @@ require 'sinatra/assetpack'
 require 'less'
 
 class GraphKeeper < Sinatra::Base
+  enable :sessions, :logging
   set :root, File.dirname(__FILE__) # You must set app root
   require File.join(settings.root, 'app', 'helpers.rb')
   Dir[File.join(settings.root, 'app', 'models', '*.rb')].each{|file| require file}
-  enable :sessions
 
   configure do
     set :site_name, "Graph Keeper"
