@@ -12,9 +12,8 @@ class GraphKeeper < Sinatra::Base
   Dir[File.join(settings.root, 'app', 'models', '*.rb')].each{|file| require file}
 
   configure do
-    set :site_name, "Graph Keeper"
-    set :session_secret, 'TODO make this a real secret hash or something'
-    set :session, :domain => 'localhost' #TODO make this environment specific or in config.ru
+    set :site_name, "Peter's Activity Graphing Spectacular"
+    set :session_secret, 'asbhq2e98das2ASDSAD@(ASDHLSH12ASDLKJ'
     set :default_bucket, "months"
     set :fetch_limit, 60 * 30
     User.set_fetch_limit settings.fetch_limit
